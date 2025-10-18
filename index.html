@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5A Messenger</title>
-    <!-- Подключаем Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -134,6 +133,12 @@
             opacity: 0.8;
         }
 
+        .online-count {
+            font-size: 0.8em;
+            opacity: 0.6;
+            margin-left: 10px;
+        }
+
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -175,6 +180,14 @@
             margin-top: 5px;
         }
 
+        .media-content {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 5px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
         .input-area {
             display: flex;
             padding: 15px 20px;
@@ -193,7 +206,11 @@
             font-size: 16px;
         }
 
-        #send-button {
+        #file-input {
+            display: none;
+        }
+
+        .file-button, #send-button {
             background-color: var(--button-color);
             color: white;
             border: none;
@@ -207,10 +224,143 @@
             font-size: 18px;
         }
 
-        .online-count {
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background-color: var(--chat-bg);
+            padding: 20px;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .settings-overlay.active {
+            display: block;
+        }
+
+        .theme-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--bg-color);
+        }
+
+        .theme-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid var(--border-color);
+        }
+
+        .light-preview {
+            background: linear-gradient(135deg, #ffffff 50%, #f0f2f5 50%);
+        }
+
+        .dark-preview {
+            background: linear-gradient(135deg, #242526 50%, #18191a 50%);
+        }
+
+        .logout-button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9em;
+            opacity: 0.7;
+            background-color: var(--chat-bg);
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .footer a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        #settings-button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        .media-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .media-fullscreen img,
+        .media-fullscreen video {
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .typing-indicator {
             font-size: 0.8em;
             opacity: 0.6;
-            margin-left: 10px;
+            padding: 5px 15px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -220,6 +370,7 @@
             <div class="logo">5A</div>
             <div class="logo-subtitle">Настоящий многопользовательский чат</div>
             <input type="text" id="username-input" placeholder="Введите ваш никнейм" maxlength="20">
+            <div class="error-message" id="login-error">Введите никнейм</div>
             <button id="login-button">Войти в чат</button>
         </div>
     </div>
@@ -231,20 +382,51 @@
                 <div class="current-user" id="current-user"></div>
                 <div class="online-count" id="online-count"></div>
             </div>
+            <button id="settings-button">⚙️</button>
         </div>
 
-        <div class="chat-container" id="chat-container"></div>
+        <div class="chat-container" id="chat-container">
+            <div class="typing-indicator" id="typing-indicator" style="display: none;"></div>
+        </div>
 
         <div class="input-area">
             <input type="text" id="message-input" placeholder="Введите сообщение...">
+            <button class="file-button" onclick="document.getElementById('file-input').click()">📎</button>
+            <input type="file" id="file-input" accept="image/*,video/*">
             <button id="send-button">➤</button>
+        </div>
+
+        <div class="media-fullscreen" id="media-fullscreen">
+            <button class="close-fullscreen" onclick="closeFullscreen()">×</button>
+        </div>
+
+        <div class="settings-overlay" id="settings-overlay"></div>
+        <div class="settings-panel" id="settings-panel">
+            <h2>Настройки</h2>
+            
+            <h3>Цветовая тема</h3>
+            <div class="theme-option" data-theme="light">
+                <div class="theme-preview light-preview"></div>
+                <span>Светлая тема</span>
+            </div>
+            <div class="theme-option" data-theme="dark">
+                <div class="theme-preview dark-preview"></div>
+                <span>Тёмная тема</span>
+            </div>
+            
+            <button class="logout-button" onclick="logout()">Выйти из аккаунта</button>
+            
+            <div class="footer">
+                by kamorka game<br>
+                <a href="https://vk.com/club230489659?from=groups" target="_blank">VK группа</a>
+            </div>
         </div>
     </div>
 
     <script>
-        // 🔑 ТВОИ КЛЮЧИ SUPABASE - ЗАМЕНИ НА СВОИ!
+        // 🔑 ЗАМЕНИ ЭТИ КЛЮЧИ НА СВОИ ИЗ SUPABASE!
         const SUPABASE_URL = 'https://dovnjdgekkoxbttmbsns.supabase.co';
-        const SUPABASE_ANON_KEY = 'SUPABASE_SERVICE_KEY';
+        const SUPABASE_ANON_KEY = 'SUPABASE_KEY';
         
         // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -252,6 +434,8 @@
         let userId = '';
 
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Страница загружена');
+            
             // Проверяем авторизацию
             const savedUser = localStorage.getItem('5a_username');
             if (savedUser) {
@@ -266,22 +450,62 @@
             // Слушаем онлайн пользователей
             listenToOnlineUsers();
 
-            // Обработчики событий
+            // Настройка обработчиков событий
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Авторизация
             document.getElementById('login-button').addEventListener('click', handleLogin);
             document.getElementById('username-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') handleLogin();
             });
+            
+            // Отправка сообщений
             document.getElementById('send-button').addEventListener('click', sendMessage);
             document.getElementById('message-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') sendMessage();
             });
-        });
+            
+            // Загрузка файлов
+            document.getElementById('file-input').addEventListener('change', handleFileUpload);
+            
+            // Настройки
+            document.getElementById('settings-button').addEventListener('click', function() {
+                document.getElementById('settings-panel').classList.add('open');
+                document.getElementById('settings-overlay').classList.add('active');
+            });
+            
+            document.getElementById('settings-overlay').addEventListener('click', function() {
+                document.getElementById('settings-panel').classList.remove('open');
+                this.classList.remove('active');
+            });
+            
+            // Темы
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const theme = this.getAttribute('data-theme');
+                    setTheme(theme);
+                });
+            });
+
+            // Сохраненная тема
+            const savedTheme = localStorage.getItem('5a_theme') || 'light';
+            setTheme(savedTheme);
+        }
 
         function handleLogin() {
-            const username = document.getElementById('username-input').value.trim();
-            if (username) {
-                loginUser(username);
+            const usernameInput = document.getElementById('username-input');
+            const username = usernameInput.value.trim();
+            const errorElement = document.getElementById('login-error');
+            
+            if (!username) {
+                errorElement.style.display = 'block';
+                return;
             }
+            
+            errorElement.style.display = 'none';
+            loginUser(username);
         }
 
         async function loginUser(username) {
@@ -322,8 +546,10 @@
             const text = messageInput.value.trim();
             
             if (text) {
+                console.log('Отправка сообщения:', text);
+                
                 // Сохраняем сообщение в Supabase
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('messages')
                     .insert([
                         { 
@@ -333,13 +559,59 @@
                         }
                     ]);
 
-                if (!error) {
+                if (error) {
+                    console.error('Ошибка отправки:', error);
+                    alert('Ошибка отправки сообщения: ' + error.message);
+                } else {
+                    console.log('Сообщение отправлено!');
                     messageInput.value = '';
                 }
             }
         }
 
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+                alert('Пожалуйста, выберите изображение или видео');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                console.log('Файл загружен, отправляем...');
+                
+                // Для файлов сохраняем как Base64 в текстовом поле
+                const { data, error } = await supabase
+                    .from('messages')
+                    .insert([
+                        { 
+                            text: `📎 Файл: ${file.name}`,
+                            sender: currentUser,
+                            user_id: userId,
+                            media_data: e.target.result, // Base64 данные
+                            media_type: file.type,
+                            media_name: file.name
+                        }
+                    ]);
+
+                if (error) {
+                    console.error('Ошибка отправки файла:', error);
+                    alert('Ошибка отправки файла: ' + error.message);
+                } else {
+                    console.log('Файл отправлен!');
+                }
+            };
+            
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
         async function loadMessages() {
+            console.log('Загрузка сообщений...');
+            
             // Загружаем последние 100 сообщений
             const { data: messages, error } = await supabase
                 .from('messages')
@@ -347,29 +619,43 @@
                 .order('created_at', { ascending: true })
                 .limit(100);
 
-            if (!error && messages) {
+            if (error) {
+                console.error('Ошибка загрузки сообщений:', error);
+                return;
+            }
+
+            if (messages) {
                 const chatContainer = document.getElementById('chat-container');
+                // Очищаем только сообщения, но не индикатор набора
+                const typingIndicator = document.getElementById('typing-indicator');
                 chatContainer.innerHTML = '';
+                chatContainer.appendChild(typingIndicator);
                 
                 messages.forEach(msg => {
                     addMessageToChat(msg);
                 });
                 
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+                console.log('Загружено сообщений:', messages.length);
             }
         }
 
         function listenToMessages() {
+            console.log('Слушаем новые сообщения...');
+            
             // Слушаем новые сообщения в реальном времени
             supabase
                 .channel('messages')
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'messages' }, 
                     (payload) => {
+                        console.log('Новое сообщение:', payload.new);
                         addMessageToChat(payload.new);
                     }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    console.log('Статус подписки:', status);
+                });
         }
 
         function listenToOnlineUsers() {
@@ -394,7 +680,7 @@
                 .select('*', { count: 'exact', head: true })
                 .gt('last_seen', twoMinutesAgo);
 
-            if (!error) {
+            if (!error && count !== null) {
                 document.getElementById('online-count').textContent = `👥 ${count} онлайн`;
             }
         }
@@ -406,25 +692,106 @@
             const isUser = messageData.user_id === userId;
             messageDiv.classList.add('message', isUser ? 'user-message' : 'other-message');
             
-            if (!isUser) {
+            // Отправитель (только для чужих сообщений)
+            if (!isUser && messageData.sender) {
                 const senderDiv = document.createElement('div');
                 senderDiv.classList.add('message-sender');
                 senderDiv.textContent = messageData.sender;
                 messageDiv.appendChild(senderDiv);
             }
             
-            const textDiv = document.createElement('div');
-            textDiv.textContent = messageData.text;
-            messageDiv.appendChild(textDiv);
+            // Текст сообщения
+            if (messageData.text) {
+                const textDiv = document.createElement('div');
+                textDiv.textContent = messageData.text;
+                messageDiv.appendChild(textDiv);
+            }
             
+            // Медиа-контент (фото/видео)
+            if (messageData.media_data) {
+                const mediaDiv = document.createElement('div');
+                if (messageData.media_type.startsWith('image')) {
+                    const img = document.createElement('img');
+                    img.src = messageData.media_data;
+                    img.classList.add('media-content');
+                    img.onclick = () => showFullscreen(messageData.media_data, 'image');
+                    mediaDiv.appendChild(img);
+                } else if (messageData.media_type.startsWith('video')) {
+                    const video = document.createElement('video');
+                    video.src = messageData.media_data;
+                    video.classList.add('media-content');
+                    video.controls = true;
+                    video.onclick = () => showFullscreen(messageData.media_data, 'video');
+                    mediaDiv.appendChild(video);
+                }
+                messageDiv.appendChild(mediaDiv);
+            }
+            
+            // Время
             const timeDiv = document.createElement('div');
             timeDiv.classList.add('message-time');
-            const time = new Date(messageData.created_at).toLocaleTimeString();
+            const time = messageData.created_at ? 
+                new Date(messageData.created_at).toLocaleTimeString() : 
+                new Date().toLocaleTimeString();
             timeDiv.textContent = time;
             messageDiv.appendChild(timeDiv);
             
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+            localStorage.setItem('5a_theme', theme);
+        }
+
+        function logout() {
+            if (confirm('Вы уверены, что хотите выйти?')) {
+                // Удаляем из онлайн пользователей
+                if (userId) {
+                    supabase
+                        .from('online_users')
+                        .delete()
+                        .eq('id', userId);
+                }
+                
+                localStorage.removeItem('5a_username');
+                localStorage.removeItem('5a_userId');
+                showAuth();
+                closeSettings();
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-panel').classList.remove('open');
+            document.getElementById('settings-overlay').classList.remove('active');
+        }
+
+        function showFullscreen(src, type) {
+            const fullscreen = document.getElementById('media-fullscreen');
+            fullscreen.innerHTML = '<button class="close-fullscreen" onclick="closeFullscreen()">×</button>';
+            
+            let mediaElement;
+            if (type === 'image') {
+                mediaElement = document.createElement('img');
+                mediaElement.src = src;
+            } else {
+                mediaElement = document.createElement('video');
+                mediaElement.src = src;
+                mediaElement.controls = true;
+                mediaElement.autoplay = true;
+            }
+            
+            fullscreen.appendChild(mediaElement);
+            fullscreen.style.display = 'flex';
+        }
+
+        function closeFullscreen() {
+            document.getElementById('media-fullscreen').style.display = 'none';
         }
 
         // Обновляем онлайн статус каждую минуту
