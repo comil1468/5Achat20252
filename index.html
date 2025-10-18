@@ -4,7 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5A Messenger</title>
+    <!-- Подключаем Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-color: #f0f2f5;
             --chat-bg: #ffffff;
@@ -27,23 +36,14 @@
             --accent-color: #ff6b6b;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
-            display: flex;
-            flex-direction: column;
             transition: all 0.3s ease;
         }
 
-        /* Страница авторизации */
         .auth-container {
             display: flex;
             flex-direction: column;
@@ -69,7 +69,6 @@
             font-weight: bold;
             color: var(--accent-color);
             margin-bottom: 10px;
-            font-family: 'Arial', sans-serif;
         }
 
         .logo-subtitle {
@@ -89,11 +88,6 @@
             font-size: 16px;
             margin-bottom: 20px;
             outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        #username-input:focus {
-            border-color: var(--accent-color);
         }
 
         #login-button {
@@ -106,14 +100,8 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
-        #login-button:hover {
-            background-color: #ff5252;
-        }
-
-        /* Основной интерфейс чата */
         .chat-interface {
             display: none;
             flex-direction: column;
@@ -127,7 +115,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .header-logo {
@@ -140,7 +127,6 @@
             font-size: 1.5em;
             font-weight: bold;
             color: var(--accent-color);
-            font-family: 'Arial', sans-serif;
         }
 
         .current-user {
@@ -162,21 +148,18 @@
             margin-bottom: 15px;
             border-radius: 18px;
             word-wrap: break-word;
-            position: relative;
         }
 
         .user-message {
             align-self: flex-end;
             background-color: var(--message-user);
             color: white;
-            border-bottom-right-radius: 5px;
         }
 
         .other-message {
             align-self: flex-start;
             background-color: var(--message-other);
             color: var(--text-color);
-            border-bottom-left-radius: 5px;
         }
 
         .message-sender {
@@ -190,14 +173,6 @@
             opacity: 0.6;
             text-align: right;
             margin-top: 5px;
-        }
-
-        .media-content {
-            max-width: 300px;
-            max-height: 300px;
-            margin-top: 5px;
-            border-radius: 10px;
-            cursor: pointer;
         }
 
         .input-area {
@@ -216,14 +191,9 @@
             background-color: var(--chat-bg);
             color: var(--text-color);
             font-size: 16px;
-            outline: none;
         }
 
-        #file-input {
-            display: none;
-        }
-
-        .file-button, #send-button {
+        #send-button {
             background-color: var(--button-color);
             color: white;
             border: none;
@@ -237,284 +207,205 @@
             font-size: 18px;
         }
 
-        .settings-panel {
-            position: fixed;
-            top: 0;
-            right: -300px;
-            width: 280px;
-            height: 100%;
-            background-color: var(--chat-bg);
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            transition: right 0.3s ease;
-            z-index: 1000;
-        }
-
-        .settings-panel.open {
-            right: 0;
-        }
-
-        .settings-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 999;
-        }
-
-        .settings-overlay.active {
-            display: block;
-        }
-
-        .theme-option {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: var(--bg-color);
-        }
-
-        .theme-preview {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 10px;
-            border: 2px solid var(--border-color);
-        }
-
-        .light-preview {
-            background: linear-gradient(135deg, #ffffff 50%, #f0f2f5 50%);
-        }
-
-        .dark-preview {
-            background: linear-gradient(135deg, #242526 50%, #18191a 50%);
-        }
-
-        .logout-button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin-top: 20px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 0.9em;
-            opacity: 0.7;
-            background-color: var(--chat-bg);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .footer a {
-            color: var(--text-color);
-            text-decoration: none;
-        }
-
-        #settings-button {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-        }
-
-        .media-fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .media-fullscreen img,
-        .media-fullscreen video {
-            max-width: 90%;
-            max-height: 90%;
-        }
-
-        .close-fullscreen {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 30px;
-            cursor: pointer;
-            background: none;
-            border: none;
+        .online-count {
+            font-size: 0.8em;
+            opacity: 0.6;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
-    <!-- Страница авторизации -->
     <div class="auth-container" id="auth-container">
         <div class="auth-box">
             <div class="logo">5A</div>
-            <div class="logo-subtitle">Быстрый мессенджер</div>
+            <div class="logo-subtitle">Настоящий многопользовательский чат</div>
             <input type="text" id="username-input" placeholder="Введите ваш никнейм" maxlength="20">
             <button id="login-button">Войти в чат</button>
         </div>
     </div>
 
-    <!-- Основной интерфейс чата -->
     <div class="chat-interface" id="chat-interface">
         <div class="header">
             <div class="header-logo">
                 <div class="logo-small">5A</div>
                 <div class="current-user" id="current-user"></div>
+                <div class="online-count" id="online-count"></div>
             </div>
-            <button id="settings-button">⚙️</button>
         </div>
 
-        <div class="chat-container" id="chat-container">
-            <!-- Сообщения загружаются здесь -->
-        </div>
+        <div class="chat-container" id="chat-container"></div>
 
         <div class="input-area">
             <input type="text" id="message-input" placeholder="Введите сообщение...">
-            <button class="file-button" onclick="document.getElementById('file-input').click()">📎</button>
-            <input type="file" id="file-input" accept="image/*,video/*">
             <button id="send-button">➤</button>
-        </div>
-
-        <div class="media-fullscreen" id="media-fullscreen">
-            <button class="close-fullscreen" onclick="closeFullscreen()">×</button>
-        </div>
-
-        <div class="settings-overlay" id="settings-overlay"></div>
-        <div class="settings-panel" id="settings-panel">
-            <h2>Настройки</h2>
-            
-            <h3>Цветовая тема</h3>
-            <div class="theme-option" data-theme="light">
-                <div class="theme-preview light-preview"></div>
-                <span>Светлая тема</span>
-            </div>
-            <div class="theme-option" data-theme="dark">
-                <div class="theme-preview dark-preview"></div>
-                <span>Тёмная тема</span>
-            </div>
-            
-            <button class="logout-button" onclick="logout()">Выйти из аккаунта</button>
-            
-            <div class="footer">
-                by kamorka game<br>
-                <a href="https://vk.com/club230489659?from=groups" target="_blank">https://vk.com/club230489659?from=groups</a>
-            </div>
         </div>
     </div>
 
     <script>
-        // Проверка авторизации при загрузке
-        function checkAuth() {
-            const savedUsername = localStorage.getItem('5A_username');
-            if (savedUsername) {
-                showChatInterface(savedUsername);
+        // 🔑 ТВОИ КЛЮЧИ SUPABASE - ЗАМЕНИ НА СВОИ!
+        const SUPABASE_URL = 'https://dovnjdgekkoxbttmbsns.supabase.co';
+        const SUPABASE_ANON_KEY = 'SUPABASE_SERVICE_KEY';
+        
+        // Инициализация Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = '';
+        let userId = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем авторизацию
+            const savedUser = localStorage.getItem('5a_username');
+            if (savedUser) {
+                loginUser(savedUser);
             } else {
-                showAuthInterface();
+                showAuth();
+            }
+
+            // Слушаем сообщения в реальном времени
+            listenToMessages();
+
+            // Слушаем онлайн пользователей
+            listenToOnlineUsers();
+
+            // Обработчики событий
+            document.getElementById('login-button').addEventListener('click', handleLogin);
+            document.getElementById('username-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleLogin();
+            });
+            document.getElementById('send-button').addEventListener('click', sendMessage);
+            document.getElementById('message-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+        });
+
+        function handleLogin() {
+            const username = document.getElementById('username-input').value.trim();
+            if (username) {
+                loginUser(username);
             }
         }
 
-        // Показать интерфейс авторизации
-        function showAuthInterface() {
+        async function loginUser(username) {
+            currentUser = username;
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            localStorage.setItem('5a_username', username);
+            localStorage.setItem('5a_userId', userId);
+            
+            // Добавляем пользователя в онлайн
+            await supabase
+                .from('online_users')
+                .upsert({ 
+                    id: userId, 
+                    username: username,
+                    last_seen: new Date().toISOString()
+                });
+            
+            showChat();
+        }
+
+        function showAuth() {
             document.getElementById('auth-container').style.display = 'flex';
             document.getElementById('chat-interface').style.display = 'none';
         }
 
-        // Показать интерфейс чата
-        function showChatInterface(username) {
+        function showChat() {
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('chat-interface').style.display = 'flex';
-            document.getElementById('current-user').textContent = username;
+            document.getElementById('current-user').textContent = currentUser;
             
-            // Загружаем сообщения
+            // Загружаем историю сообщений
             loadMessages();
         }
 
-        // Вход в систему
-        function login() {
-            const usernameInput = document.getElementById('username-input');
-            const username = usernameInput.value.trim();
+        async function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const text = messageInput.value.trim();
             
-            if (username) {
-                // Сохраняем логин
-                localStorage.setItem('5A_username', username);
-                showChatInterface(username);
-            } else {
-                alert('Пожалуйста, введите никнейм');
+            if (text) {
+                // Сохраняем сообщение в Supabase
+                const { error } = await supabase
+                    .from('messages')
+                    .insert([
+                        { 
+                            text: text, 
+                            sender: currentUser,
+                            user_id: userId
+                        }
+                    ]);
+
+                if (!error) {
+                    messageInput.value = '';
+                }
             }
         }
 
-        // Выход из системы
-        function logout() {
-            if (confirm('Вы уверены, что хотите выйти?')) {
-                localStorage.removeItem('5A_username');
-                showAuthInterface();
+        async function loadMessages() {
+            // Загружаем последние 100 сообщений
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(100);
+
+            if (!error && messages) {
+                const chatContainer = document.getElementById('chat-container');
+                chatContainer.innerHTML = '';
                 
-                // Закрываем настройки
-                document.getElementById('settings-panel').classList.remove('open');
-                document.getElementById('settings-overlay').classList.remove('active');
+                messages.forEach(msg => {
+                    addMessageToChat(msg);
+                });
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
         }
 
-        // Загрузка сообщений из localStorage
-        function loadMessages() {
-            const messages = JSON.parse(localStorage.getItem('5A_chatMessages') || '[]');
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.innerHTML = '';
-            
-            messages.forEach(msg => {
-                addMessageToChat(msg, false);
-            });
+        function listenToMessages() {
+            // Слушаем новые сообщения в реальном времени
+            supabase
+                .channel('messages')
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'messages' }, 
+                    (payload) => {
+                        addMessageToChat(payload.new);
+                    }
+                )
+                .subscribe();
         }
 
-        // Сохранение сообщения в localStorage
-        function saveMessage(message, mediaData = null) {
-            const messages = JSON.parse(localStorage.getItem('5A_chatMessages') || '[]');
-            const currentUsername = localStorage.getItem('5A_username');
-            
-            const newMessage = {
-                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                text: message,
-                sender: currentUsername,
-                timestamp: new Date().toLocaleTimeString(),
-                media: mediaData
-            };
-            
-            messages.push(newMessage);
-            localStorage.setItem('5A_chatMessages', JSON.stringify(messages));
-            
-            return newMessage;
+        function listenToOnlineUsers() {
+            // Слушаем онлайн пользователей
+            supabase
+                .channel('online_users')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'online_users' }, 
+                    async () => {
+                        await updateOnlineCount();
+                    }
+                )
+                .subscribe();
         }
 
-        // Добавление сообщения в чат
-        function addMessageToChat(messageData, isNew = true) {
+        async function updateOnlineCount() {
+            // Получаем количество онлайн пользователей (последние 2 минуты)
+            const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+            
+            const { count, error } = await supabase
+                .from('online_users')
+                .select('*', { count: 'exact', head: true })
+                .gt('last_seen', twoMinutesAgo);
+
+            if (!error) {
+                document.getElementById('online-count').textContent = `👥 ${count} онлайн`;
+            }
+        }
+
+        function addMessageToChat(messageData) {
             const chatContainer = document.getElementById('chat-container');
             const messageDiv = document.createElement('div');
             
-            const currentUsername = localStorage.getItem('5A_username');
-            const isUser = messageData.sender === currentUsername;
-            
+            const isUser = messageData.user_id === userId;
             messageDiv.classList.add('message', isUser ? 'user-message' : 'other-message');
             
-            // Отправитель (только для чужих сообщений)
             if (!isUser) {
                 const senderDiv = document.createElement('div');
                 senderDiv.classList.add('message-sender');
@@ -522,160 +413,41 @@
                 messageDiv.appendChild(senderDiv);
             }
             
-            // Текст сообщения
-            if (messageData.text) {
-                const textDiv = document.createElement('div');
-                textDiv.textContent = messageData.text;
-                messageDiv.appendChild(textDiv);
-            }
+            const textDiv = document.createElement('div');
+            textDiv.textContent = messageData.text;
+            messageDiv.appendChild(textDiv);
             
-            // Медиа-контент
-            if (messageData.media) {
-                const mediaDiv = document.createElement('div');
-                if (messageData.media.type.startsWith('image')) {
-                    const img = document.createElement('img');
-                    img.src = messageData.media.data;
-                    img.classList.add('media-content');
-                    img.onclick = () => showFullscreen(messageData.media.data, 'image');
-                    mediaDiv.appendChild(img);
-                } else if (messageData.media.type.startsWith('video')) {
-                    const video = document.createElement('video');
-                    video.src = messageData.media.data;
-                    video.classList.add('media-content');
-                    video.controls = true;
-                    video.onclick = () => showFullscreen(messageData.media.data, 'video');
-                    mediaDiv.appendChild(video);
-                }
-                messageDiv.appendChild(mediaDiv);
-            }
-            
-            // Время
             const timeDiv = document.createElement('div');
             timeDiv.classList.add('message-time');
-            timeDiv.textContent = messageData.timestamp;
+            const time = new Date(messageData.created_at).toLocaleTimeString();
+            timeDiv.textContent = time;
             messageDiv.appendChild(timeDiv);
             
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // Если это новое сообщение, сохраняем его
-            if (isNew) {
-                saveMessage(messageData.text, messageData.media);
+        }
+
+        // Обновляем онлайн статус каждую минуту
+        setInterval(async () => {
+            if (currentUser) {
+                await supabase
+                    .from('online_users')
+                    .upsert({ 
+                        id: userId, 
+                        username: currentUser,
+                        last_seen: new Date().toISOString()
+                    });
             }
-        }
+        }, 60000);
 
-        // Отправка сообщения
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value.trim();
-            
-            if (message) {
-                addMessageToChat({
-                    text: message,
-                    sender: localStorage.getItem('5A_username'),
-                    timestamp: new Date().toLocaleTimeString()
-                });
-                
-                messageInput.value = '';
+        // Очищаем онлайн статус при закрытии страницы
+        window.addEventListener('beforeunload', async () => {
+            if (userId) {
+                await supabase
+                    .from('online_users')
+                    .delete()
+                    .eq('id', userId);
             }
-        }
-
-        // Обработка файлов
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                addMessageToChat({
-                    text: '',
-                    sender: localStorage.getItem('5A_username'),
-                    timestamp: new Date().toLocaleTimeString(),
-                    media: {
-                        type: file.type,
-                        data: e.target.result,
-                        name: file.name
-                    }
-                });
-            };
-            
-            if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-                reader.readAsDataURL(file);
-            }
-            
-            event.target.value = '';
-        }
-
-        // Полноэкранный просмотр медиа
-        function showFullscreen(src, type) {
-            const fullscreen = document.getElementById('media-fullscreen');
-            fullscreen.innerHTML = '<button class="close-fullscreen" onclick="closeFullscreen()">×</button>';
-            
-            let mediaElement;
-            if (type === 'image') {
-                mediaElement = document.createElement('img');
-                mediaElement.src = src;
-            } else {
-                mediaElement = document.createElement('video');
-                mediaElement.src = src;
-                mediaElement.controls = true;
-                mediaElement.autoplay = true;
-            }
-            
-            fullscreen.appendChild(mediaElement);
-            fullscreen.style.display = 'flex';
-        }
-
-        function closeFullscreen() {
-            document.getElementById('media-fullscreen').style.display = 'none';
-        }
-
-        // Настройки темы
-        function initTheme() {
-            const savedTheme = localStorage.getItem('5A_theme') || 'light';
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-theme');
-            }
-            
-            document.querySelectorAll('.theme-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const theme = this.getAttribute('data-theme');
-                    document.body.classList.toggle('dark-theme', theme === 'dark');
-                    localStorage.setItem('5A_theme', theme);
-                });
-            });
-        }
-
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-            initTheme();
-            
-            // Обработчики событий авторизации
-            document.getElementById('login-button').addEventListener('click', login);
-            document.getElementById('username-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') login();
-            });
-            
-            // Обработчики событий чата
-            document.getElementById('send-button').addEventListener('click', sendMessage);
-            document.getElementById('message-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
-            });
-            
-            document.getElementById('file-input').addEventListener('change', handleFileUpload);
-            
-            // Настройки
-            document.getElementById('settings-button').addEventListener('click', function() {
-                document.getElementById('settings-panel').classList.add('open');
-                document.getElementById('settings-overlay').classList.add('active');
-            });
-            
-            document.getElementById('settings-overlay').addEventListener('click', function() {
-                document.getElementById('settings-panel').classList.remove('open');
-                this.classList.remove('active');
-            });
         });
     </script>
 </body>
