@@ -362,6 +362,15 @@
             padding: 5px 15px;
             font-style: italic;
         }
+
+        .connection-status {
+            font-size: 0.7em;
+            opacity: 0.6;
+            margin-left: 10px;
+        }
+
+        .connected { color: green; }
+        .disconnected { color: red; }
     </style>
 </head>
 <body>
@@ -381,6 +390,7 @@
                 <div class="logo-small">5A</div>
                 <div class="current-user" id="current-user"></div>
                 <div class="online-count" id="online-count"></div>
+                <div class="connection-status" id="connection-status">●</div>
             </div>
             <button id="settings-button">⚙️</button>
         </div>
@@ -424,18 +434,36 @@
     </div>
 
     <script>
-        // 🔑 ЗАМЕНИ ЭТИ КЛЮЧИ НА СВОИ ИЗ SUPABASE!
+        // 🟢 ТВОИ НАСТОЯЩИЕ КЛЮЧИ SUPABASE!
         const SUPABASE_URL = 'https://dovnjdgekkoxbttmbsns.supabase.co';
-        const SUPABASE_ANON_KEY = 'SUPABASE_KEY';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdm5qZGdla2tveGJ0dG1ic25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODMyMzgsImV4cCI6MjA3NjM1OTIzOH0.AxrDwoqNbsNsxbmj3_OoY2q2wLzegZFdcuu04X_HuA0';
         
         // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = '';
         let userId = '';
 
+        // Проверка подключения
+        async function checkConnection() {
+            try {
+                const { data, error } = await supabase.from('messages').select('*').limit(1);
+                if (error) throw error;
+                document.getElementById('connection-status').className = 'connection-status connected';
+                console.log('✅ Подключение к Supabase успешно!');
+                return true;
+            } catch (error) {
+                document.getElementById('connection-status').className = 'connection-status disconnected';
+                console.error('❌ Ошибка подключения:', error);
+                return false;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Страница загружена');
+            console.log('🚀 Загрузка чата...');
             
+            // Проверяем подключение
+            checkConnection();
+
             // Проверяем авторизацию
             const savedUser = localStorage.getItem('5a_username');
             if (savedUser) {
@@ -443,12 +471,6 @@
             } else {
                 showAuth();
             }
-
-            // Слушаем сообщения в реальном времени
-            listenToMessages();
-
-            // Слушаем онлайн пользователей
-            listenToOnlineUsers();
 
             // Настройка обработчиков событий
             setupEventListeners();
@@ -515,14 +537,22 @@
             localStorage.setItem('5a_username', username);
             localStorage.setItem('5a_userId', userId);
             
+            console.log('👤 Пользователь:', username);
+            
             // Добавляем пользователя в онлайн
-            await supabase
-                .from('online_users')
-                .upsert({ 
-                    id: userId, 
-                    username: username,
-                    last_seen: new Date().toISOString()
-                });
+            try {
+                const { error } = await supabase
+                    .from('online_users')
+                    .upsert({ 
+                        id: userId, 
+                        username: username,
+                        last_seen: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+            } catch (error) {
+                console.error('Ошибка добавления в онлайн:', error);
+            }
             
             showChat();
         }
@@ -539,6 +569,12 @@
             
             // Загружаем историю сообщений
             loadMessages();
+            
+            // Слушаем новые сообщения
+            listenToMessages();
+            
+            // Слушаем онлайн пользователей
+            listenToOnlineUsers();
         }
 
         async function sendMessage() {
@@ -546,25 +582,29 @@
             const text = messageInput.value.trim();
             
             if (text) {
-                console.log('Отправка сообщения:', text);
+                console.log('📤 Отправка сообщения:', text);
                 
                 // Сохраняем сообщение в Supabase
-                const { data, error } = await supabase
-                    .from('messages')
-                    .insert([
-                        { 
-                            text: text, 
-                            sender: currentUser,
-                            user_id: userId
-                        }
-                    ]);
+                try {
+                    const { data, error } = await supabase
+                        .from('messages')
+                        .insert([
+                            { 
+                                text: text, 
+                                sender: currentUser,
+                                user_id: userId
+                            }
+                        ]);
 
-                if (error) {
-                    console.error('Ошибка отправки:', error);
-                    alert('Ошибка отправки сообщения: ' + error.message);
-                } else {
-                    console.log('Сообщение отправлено!');
-                    messageInput.value = '';
+                    if (error) {
+                        console.error('❌ Ошибка отправки:', error);
+                        alert('Ошибка отправки сообщения: ' + error.message);
+                    } else {
+                        console.log('✅ Сообщение отправлено!');
+                        messageInput.value = '';
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка:', error);
                 }
             }
         }
@@ -581,27 +621,31 @@
             const reader = new FileReader();
             
             reader.onload = async function(e) {
-                console.log('Файл загружен, отправляем...');
+                console.log('📎 Отправка файла:', file.name);
                 
                 // Для файлов сохраняем как Base64 в текстовом поле
-                const { data, error } = await supabase
-                    .from('messages')
-                    .insert([
-                        { 
-                            text: `📎 Файл: ${file.name}`,
-                            sender: currentUser,
-                            user_id: userId,
-                            media_data: e.target.result, // Base64 данные
-                            media_type: file.type,
-                            media_name: file.name
-                        }
-                    ]);
+                try {
+                    const { data, error } = await supabase
+                        .from('messages')
+                        .insert([
+                            { 
+                                text: `📎 Файл: ${file.name}`,
+                                sender: currentUser,
+                                user_id: userId,
+                                media_data: e.target.result,
+                                media_type: file.type,
+                                media_name: file.name
+                            }
+                        ]);
 
-                if (error) {
-                    console.error('Ошибка отправки файла:', error);
-                    alert('Ошибка отправки файла: ' + error.message);
-                } else {
-                    console.log('Файл отправлен!');
+                    if (error) {
+                        console.error('❌ Ошибка отправки файла:', error);
+                        alert('Ошибка отправки файла: ' + error.message);
+                    } else {
+                        console.log('✅ Файл отправлен!');
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка:', error);
                 }
             };
             
@@ -610,38 +654,41 @@
         }
 
         async function loadMessages() {
-            console.log('Загрузка сообщений...');
+            console.log('📥 Загрузка сообщений...');
             
-            // Загружаем последние 100 сообщений
-            const { data: messages, error } = await supabase
-                .from('messages')
-                .select('*')
-                .order('created_at', { ascending: true })
-                .limit(100);
+            try {
+                // Загружаем последние 100 сообщений
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: true })
+                    .limit(100);
 
-            if (error) {
-                console.error('Ошибка загрузки сообщений:', error);
-                return;
-            }
+                if (error) {
+                    console.error('❌ Ошибка загрузки сообщений:', error);
+                    return;
+                }
 
-            if (messages) {
-                const chatContainer = document.getElementById('chat-container');
-                // Очищаем только сообщения, но не индикатор набора
-                const typingIndicator = document.getElementById('typing-indicator');
-                chatContainer.innerHTML = '';
-                chatContainer.appendChild(typingIndicator);
-                
-                messages.forEach(msg => {
-                    addMessageToChat(msg);
-                });
-                
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-                console.log('Загружено сообщений:', messages.length);
+                if (messages) {
+                    const chatContainer = document.getElementById('chat-container');
+                    const typingIndicator = document.getElementById('typing-indicator');
+                    chatContainer.innerHTML = '';
+                    chatContainer.appendChild(typingIndicator);
+                    
+                    messages.forEach(msg => {
+                        addMessageToChat(msg);
+                    });
+                    
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    console.log('✅ Загружено сообщений:', messages.length);
+                }
+            } catch (error) {
+                console.error('❌ Ошибка:', error);
             }
         }
 
         function listenToMessages() {
-            console.log('Слушаем новые сообщения...');
+            console.log('👂 Слушаем новые сообщения...');
             
             // Слушаем новые сообщения в реальном времени
             supabase
@@ -649,16 +696,18 @@
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'messages' }, 
                     (payload) => {
-                        console.log('Новое сообщение:', payload.new);
+                        console.log('📨 Новое сообщение:', payload.new);
                         addMessageToChat(payload.new);
                     }
                 )
                 .subscribe((status) => {
-                    console.log('Статус подписки:', status);
+                    console.log('📡 Статус подписки:', status);
                 });
         }
 
         function listenToOnlineUsers() {
+            console.log('👥 Слушаем онлайн пользователей...');
+            
             // Слушаем онлайн пользователей
             supabase
                 .channel('online_users')
@@ -672,16 +721,20 @@
         }
 
         async function updateOnlineCount() {
-            // Получаем количество онлайн пользователей (последние 2 минуты)
-            const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-            
-            const { count, error } = await supabase
-                .from('online_users')
-                .select('*', { count: 'exact', head: true })
-                .gt('last_seen', twoMinutesAgo);
+            try {
+                // Получаем количество онлайн пользователей (последние 2 минуты)
+                const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+                
+                const { count, error } = await supabase
+                    .from('online_users')
+                    .select('*', { count: 'exact', head: true })
+                    .gt('last_seen', twoMinutesAgo);
 
-            if (!error && count !== null) {
-                document.getElementById('online-count').textContent = `👥 ${count} онлайн`;
+                if (!error && count !== null) {
+                    document.getElementById('online-count').textContent = `👥 ${count} онлайн`;
+                }
+            } catch (error) {
+                console.error('❌ Ошибка обновления онлайн:', error);
             }
         }
 
@@ -797,25 +850,34 @@
         // Обновляем онлайн статус каждую минуту
         setInterval(async () => {
             if (currentUser) {
-                await supabase
-                    .from('online_users')
-                    .upsert({ 
-                        id: userId, 
-                        username: currentUser,
-                        last_seen: new Date().toISOString()
-                    });
+                try {
+                    await supabase
+                        .from('online_users')
+                        .upsert({ 
+                            id: userId, 
+                            username: currentUser,
+                            last_seen: new Date().toISOString()
+                        });
+                } catch (error) {
+                    console.error('❌ Ошибка обновления онлайн статуса:', error);
+                }
             }
         }, 60000);
 
         // Очищаем онлайн статус при закрытии страницы
         window.addEventListener('beforeunload', async () => {
             if (userId) {
-                await supabase
-                    .from('online_users')
-                    .delete()
-                    .eq('id', userId);
+                try {
+                    await supabase
+                        .from('online_users')
+                        .delete()
+                        .eq('id', userId);
+                } catch (error) {
+                    console.error('❌ Ошибка удаления онлайн статуса:', error);
+                }
             }
         });
     </script>
 </body>
+</html>
 </html>
