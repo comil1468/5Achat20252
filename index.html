@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5A Messenger</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <title>Проверка безопасности</title>
     <style>
         * {
             margin: 0;
@@ -13,871 +11,362 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --bg-color: #f0f2f5;
-            --chat-bg: #ffffff;
-            --text-color: #333333;
-            --message-user: #0084ff;
-            --message-other: #e4e6eb;
-            --button-color: #1877f2;
-            --border-color: #dddfe2;
-            --accent-color: #ff6b6b;
-        }
-
-        .dark-theme {
-            --bg-color: #18191a;
-            --chat-bg: #242526;
-            --text-color: #e4e6eb;
-            --message-user: #0084ff;
-            --message-other: #3e4042;
-            --button-color: #1877f2;
-            --border-color: #3e4042;
-            --accent-color: #ff6b6b;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            transition: all 0.3s ease;
-        }
-
-        .auth-container {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            min-height: 100vh;
             padding: 20px;
-            background: linear-gradient(135deg, var(--accent-color), var(--button-color));
         }
 
-        .auth-box {
-            background-color: var(--chat-bg);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        .container {
             text-align: center;
-            max-width: 400px;
-            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            max-width: 500px;
         }
 
-        .logo {
-            font-size: 3em;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 10px;
-        }
-
-        .logo-subtitle {
-            font-size: 1.2em;
-            opacity: 0.8;
-            margin-bottom: 30px;
-            color: var(--text-color);
-        }
-
-        #username-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            background-color: var(--chat-bg);
-            color: var(--text-color);
-            font-size: 16px;
+        h1 {
+            color: #2c3e50;
             margin-bottom: 20px;
-            outline: none;
-        }
-
-        #login-button {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .chat-interface {
-            display: none;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        .header {
-            background-color: var(--chat-bg);
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-small {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--accent-color);
-        }
-
-        .current-user {
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-
-        .online-count {
-            font-size: 0.8em;
-            opacity: 0.6;
-            margin-left: 10px;
-        }
-
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-radius: 18px;
-            word-wrap: break-word;
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background-color: var(--message-user);
-            color: white;
-        }
-
-        .other-message {
-            align-self: flex-start;
-            background-color: var(--message-other);
-            color: var(--text-color);
-        }
-
-        .message-sender {
-            font-size: 0.8em;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-
-        .message-time {
-            font-size: 0.7em;
-            opacity: 0.6;
-            text-align: right;
-            margin-top: 5px;
-        }
-
-        .media-content {
-            max-width: 300px;
-            max-height: 300px;
-            margin-top: 5px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        .input-area {
-            display: flex;
-            padding: 15px 20px;
-            background-color: var(--chat-bg);
-            border-top: 1px solid var(--border-color);
-            gap: 10px;
-        }
-
-        #message-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            background-color: var(--chat-bg);
-            color: var(--text-color);
-            font-size: 16px;
-        }
-
-        #file-input {
-            display: none;
-        }
-
-        .file-button, #send-button {
-            background-color: var(--button-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .settings-panel {
-            position: fixed;
-            top: 0;
-            right: -300px;
-            width: 280px;
-            height: 100%;
-            background-color: var(--chat-bg);
-            padding: 20px;
-            transition: right 0.3s ease;
-            z-index: 1000;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-        }
-
-        .settings-panel.open {
-            right: 0;
-        }
-
-        .settings-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 999;
-        }
-
-        .settings-overlay.active {
-            display: block;
-        }
-
-        .theme-option {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: var(--bg-color);
-        }
-
-        .theme-preview {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 10px;
-            border: 2px solid var(--border-color);
-        }
-
-        .light-preview {
-            background: linear-gradient(135deg, #ffffff 50%, #f0f2f5 50%);
-        }
-
-        .dark-preview {
-            background: linear-gradient(135deg, #242526 50%, #18191a 50%);
-        }
-
-        .logout-button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin-top: 20px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 0.9em;
-            opacity: 0.7;
-            background-color: var(--chat-bg);
-            border-top: 1px solid var(--border-color);
-            margin-top: 20px;
-        }
-
-        .footer a {
-            color: var(--text-color);
-            text-decoration: none;
-        }
-
-        #settings-button {
-            background: none;
-            border: none;
-            color: var(--text-color);
             font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
         }
 
-        .media-fullscreen {
+        p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .verify-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .verify-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Стили для экрана блокировки */
+        .block-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .media-fullscreen img,
-        .media-fullscreen video {
-            max-width: 90%;
-            max-height: 90%;
-        }
-
-        .close-fullscreen {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            background: linear-gradient(45deg, #c0392b, #e74c3c, #c0392b);
             color: white;
-            font-size: 30px;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        .error-message {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
             display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: alarmPulse 0.5s infinite alternate;
         }
 
-        .typing-indicator {
-            font-size: 0.8em;
-            opacity: 0.6;
-            padding: 5px 15px;
-            font-style: italic;
+        @keyframes alarmPulse {
+            from { background: linear-gradient(45deg, #c0392b, #e74c3c); }
+            to { background: linear-gradient(45deg, #e74c3c, #c0392b); }
         }
 
-        .connection-status {
-            font-size: 0.7em;
-            opacity: 0.6;
-            margin-left: 10px;
+        .warning-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: shake 0.5s infinite;
         }
 
-        .connected { color: green; }
-        .disconnected { color: red; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .block-title {
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .block-message {
+            font-size: 18px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        .articles {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            max-width: 90%;
+        }
+
+        .article-item {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .contact-info {
+            margin-top: 30px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .countdown {
+            font-size: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .emergency-alert {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            background: #ff0000;
+            padding: 10px;
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
-    <div class="auth-container" id="auth-container">
-        <div class="auth-box">
-            <div class="logo">5A</div>
-            <div class="logo-subtitle">Настоящий многопользовательский чат</div>
-            <input type="text" id="username-input" placeholder="Введите ваш никнейм" maxlength="20">
-            <div class="error-message" id="login-error">Введите никнейм</div>
-            <button id="login-button">Войти в чат</button>
-        </div>
+    <!-- Основной экран -->
+    <div class="container" id="mainScreen">
+        <h1>🔒 Проверка безопасности устройства</h1>
+        <p>Система безопасности обнаружила подозрительную активность на вашем устройстве.</p>
+        <p>Для продолжения использования устройства необходимо пройти проверку на бота.</p>
+        <p><strong>Нажмите кнопку ниже для начала проверки</strong></p>
+        <button class="verify-btn" onclick="startBlockSequence()">✅ Начать проверку безопасности</button>
     </div>
 
-    <div class="chat-interface" id="chat-interface">
-        <div class="header">
-            <div class="header-logo">
-                <div class="logo-small">5A</div>
-                <div class="current-user" id="current-user"></div>
-                <div class="online-count" id="online-count"></div>
-                <div class="connection-status" id="connection-status">●</div>
-            </div>
-            <button id="settings-button">⚙️</button>
+    <!-- Экран блокировки -->
+    <div class="block-screen" id="blockScreen">
+        <div class="emergency-alert">
+            ⚠️ СИГНАЛ ТРЕВОГИ - ОБНАРУЖЕНА НЕСАНКЦИОНИРОВАННАЯ АКТИВНОСТЬ
         </div>
-
-        <div class="chat-container" id="chat-container">
-            <div class="typing-indicator" id="typing-indicator" style="display: none;"></div>
+        
+        <div class="warning-icon">⚠️</div>
+        
+        <h1 class="block-title">ВАШЕ УСТРОЙСТВО ЗАБЛОКИРОВАНО</h1>
+        
+        <div class="block-message">
+            МВД России заблокировало ваше устройство за нарушение законодательства РФ
         </div>
-
-        <div class="input-area">
-            <input type="text" id="message-input" placeholder="Введите сообщение...">
-            <button class="file-button" onclick="document.getElementById('file-input').click()">📎</button>
-            <input type="file" id="file-input" accept="image/*,video/*">
-            <button id="send-button">➤</button>
+        
+        <div class="articles">
+            <div class="article-item">📌 Статья 272 УК РФ - Неправомерный доступ к компьютерной информации</div>
+            <div class="article-item">📌 Статья 273 УК РФ - Создание, использование и распространение вредоносных программ</div>
+            <div class="article-item">📌 Статья 274 УК РФ - Нарушение правил эксплуатации средств хранения, обработки передачи компьютерной информации</div>
+            <div class="article-item">📌 Статья 159 УК РФ - Мошенничество</div>
         </div>
-
-        <div class="media-fullscreen" id="media-fullscreen">
-            <button class="close-fullscreen" onclick="closeFullscreen()">×</button>
+        
+        <div class="block-message">
+            Обнаружена попытка несанкционированного доступа к государственным информационным системам
         </div>
-
-        <div class="settings-overlay" id="settings-overlay"></div>
-        <div class="settings-panel" id="settings-panel">
-            <h2>Настройки</h2>
-            
-            <h3>Цветовая тема</h3>
-            <div class="theme-option" data-theme="light">
-                <div class="theme-preview light-preview"></div>
-                <span>Светлая тема</span>
-            </div>
-            <div class="theme-option" data-theme="dark">
-                <div class="theme-preview dark-preview"></div>
-                <span>Тёмная тема</span>
-            </div>
-            
-            <button class="logout-button" onclick="logout()">Выйти из аккаунта</button>
-            
-            <div class="footer">
-                by kamorka game<br>
-                <a href="https://vk.com/club230489659?from=groups" target="_blank">VK группа</a>
-            </div>
+        
+        <div class="countdown" id="countdown">
+            Блокировка снята через: <span id="timer">59:59</span>
+        </div>
+        
+        <div class="contact-info">
+            Для разблокировки обратитесь в ближайшее отделение МВД<br>
+            Телефон горячей линии: 8-800-222-74-72
         </div>
     </div>
 
     <script>
-        // 🟢 ТВОИ НАСТОЯЩИЕ КЛЮЧИ SUPABASE!
-        const SUPABASE_URL = 'https://dovnjdgekkoxbttmbsns.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdm5qZGdla2tveGJ0dG1ic25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODMyMzgsImV4cCI6MjA3NjM1OTIzOH0.AxrDwoqNbsNsxbmj3_OoY2q2wLzegZFdcuu04X_HuA0';
-        
-        // Инициализация Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = '';
-        let userId = '';
+        let alarmSound;
+        let isPlaying = false;
 
-        // Проверка подключения
-        async function checkConnection() {
-            try {
-                const { data, error } = await supabase.from('messages').select('*').limit(1);
-                if (error) throw error;
-                document.getElementById('connection-status').className = 'connection-status connected';
-                console.log('✅ Подключение к Supabase успешно!');
-                return true;
-            } catch (error) {
-                document.getElementById('connection-status').className = 'connection-status disconnected';
-                console.error('❌ Ошибка подключения:', error);
-                return false;
+        function createAlarmSound() {
+            // Создаем звук сирены
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator1.type = 'sawtooth';
+            oscillator2.type = 'sawtooth';
+            oscillator1.frequency.value = 800;
+            oscillator2.frequency.value = 600;
+            
+            gainNode.gain.value = 0.5;
+            
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Запускаем осцилляторы
+            oscillator1.start();
+            oscillator2.start();
+            
+            // Модулируем частоту для эффекта сирены
+            let time = 0;
+            function modulate() {
+                if (!isPlaying) return;
+                
+                time += 0.1;
+                const mod = Math.sin(time) * 200;
+                oscillator1.frequency.value = 800 + mod;
+                oscillator2.frequency.value = 600 + mod;
+                
+                setTimeout(modulate, 100);
+            }
+            
+            modulate();
+            
+            return { oscillator1, oscillator2, audioContext };
+        }
+
+        function startAlarm() {
+            if (!isPlaying) {
+                isPlaying = true;
+                alarmSound = createAlarmSound();
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Загрузка чата...');
-            
-            // Проверяем подключение
-            checkConnection();
-
-            // Проверяем авторизацию
-            const savedUser = localStorage.getItem('5a_username');
-            if (savedUser) {
-                loginUser(savedUser);
-            } else {
-                showAuth();
+        function stopAlarm() {
+            if (isPlaying && alarmSound) {
+                isPlaying = false;
+                try {
+                    alarmSound.oscillator1.stop();
+                    alarmSound.oscillator2.stop();
+                    alarmSound.audioContext.close();
+                } catch(e) {
+                    console.log("Ошибка остановки звука:", e);
+                }
             }
+        }
 
-            // Настройка обработчиков событий
-            setupEventListeners();
+        function startBlockSequence() {
+            // Скрываем основной экран
+            document.getElementById('mainScreen').style.display = 'none';
+            
+            // Показываем экран блокировки
+            const blockScreen = document.getElementById('blockScreen');
+            blockScreen.style.display = 'flex';
+            
+            // Запускаем звук тревоги
+            startAlarm();
+            
+            // Запускаем таймер обратного отсчета
+            startCountdown();
+            
+            // Блокируем основные функции браузера
+            disableBrowserFunctions();
+        }
+
+        function startCountdown() {
+            let minutes = 59;
+            let seconds = 59;
+            
+            const timerElement = document.getElementById('timer');
+            
+            const countdown = setInterval(() => {
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                seconds--;
+                if (seconds < 0) {
+                    seconds = 59;
+                    minutes--;
+                    
+                    if (minutes < 0) {
+                        clearInterval(countdown);
+                        // Через час "разблокируем" устройство
+                        unlockDevice();
+                    }
+                }
+            }, 1000);
+        }
+
+        function unlockDevice() {
+            stopAlarm();
+            alert("Устройство разблокировано. Это был пранк! 😊\n\nНе беспокойтесь, ваше устройство в полной безопасности.");
+            document.getElementById('blockScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+            enableBrowserFunctions();
+        }
+
+        function disableBrowserFunctions() {
+            // Запрещаем правый клик
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Запрещаем выделение текста
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Запрещаем копирование
+            document.addEventListener('copy', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Блокируем клавиши
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+                    (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+                    e.key === 'Escape') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+
+        function enableBrowserFunctions() {
+            // Восстанавливаем стандартное поведение
+            document.removeEventListener('contextmenu', arguments.callee);
+            document.removeEventListener('selectstart', arguments.callee);
+            document.removeEventListener('copy', arguments.callee);
+            document.removeEventListener('keydown', arguments.callee);
+        }
+
+        // Добавляем секретную комбинацию для выхода (удерживать 3 секунды)
+        let secretTimer;
+        let secretCount = 0;
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Shift' && isPlaying) {
+                secretCount++;
+                if (secretCount === 1) {
+                    secretTimer = setTimeout(() => {
+                        unlockDevice();
+                    }, 3000);
+                }
+            }
         });
 
-        function setupEventListeners() {
-            // Авторизация
-            document.getElementById('login-button').addEventListener('click', handleLogin);
-            document.getElementById('username-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') handleLogin();
-            });
-            
-            // Отправка сообщений
-            document.getElementById('send-button').addEventListener('click', sendMessage);
-            document.getElementById('message-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
-            });
-            
-            // Загрузка файлов
-            document.getElementById('file-input').addEventListener('change', handleFileUpload);
-            
-            // Настройки
-            document.getElementById('settings-button').addEventListener('click', function() {
-                document.getElementById('settings-panel').classList.add('open');
-                document.getElementById('settings-overlay').classList.add('active');
-            });
-            
-            document.getElementById('settings-overlay').addEventListener('click', function() {
-                document.getElementById('settings-panel').classList.remove('open');
-                this.classList.remove('active');
-            });
-            
-            // Темы
-            document.querySelectorAll('.theme-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const theme = this.getAttribute('data-theme');
-                    setTheme(theme);
-                });
-            });
-
-            // Сохраненная тема
-            const savedTheme = localStorage.getItem('5a_theme') || 'light';
-            setTheme(savedTheme);
-        }
-
-        function handleLogin() {
-            const usernameInput = document.getElementById('username-input');
-            const username = usernameInput.value.trim();
-            const errorElement = document.getElementById('login-error');
-            
-            if (!username) {
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            errorElement.style.display = 'none';
-            loginUser(username);
-        }
-
-        async function loginUser(username) {
-            currentUser = username;
-            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            
-            localStorage.setItem('5a_username', username);
-            localStorage.setItem('5a_userId', userId);
-            
-            console.log('👤 Пользователь:', username);
-            
-            // Добавляем пользователя в онлайн
-            try {
-                const { error } = await supabase
-                    .from('online_users')
-                    .upsert({ 
-                        id: userId, 
-                        username: username,
-                        last_seen: new Date().toISOString()
-                    });
-
-                if (error) throw error;
-            } catch (error) {
-                console.error('Ошибка добавления в онлайн:', error);
-            }
-            
-            showChat();
-        }
-
-        function showAuth() {
-            document.getElementById('auth-container').style.display = 'flex';
-            document.getElementById('chat-interface').style.display = 'none';
-        }
-
-        function showChat() {
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('chat-interface').style.display = 'flex';
-            document.getElementById('current-user').textContent = currentUser;
-            
-            // Загружаем историю сообщений
-            loadMessages();
-            
-            // Слушаем новые сообщения
-            listenToMessages();
-            
-            // Слушаем онлайн пользователей
-            listenToOnlineUsers();
-        }
-
-        async function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const text = messageInput.value.trim();
-            
-            if (text) {
-                console.log('📤 Отправка сообщения:', text);
-                
-                // Сохраняем сообщение в Supabase
-                try {
-                    const { data, error } = await supabase
-                        .from('messages')
-                        .insert([
-                            { 
-                                text: text, 
-                                sender: currentUser,
-                                user_id: userId
-                            }
-                        ]);
-
-                    if (error) {
-                        console.error('❌ Ошибка отправки:', error);
-                        alert('Ошибка отправки сообщения: ' + error.message);
-                    } else {
-                        console.log('✅ Сообщение отправлено!');
-                        messageInput.value = '';
-                    }
-                } catch (error) {
-                    console.error('❌ Ошибка:', error);
-                }
-            }
-        }
-
-        async function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-                alert('Пожалуйста, выберите изображение или видео');
-                return;
-            }
-            
-            const reader = new FileReader();
-            
-            reader.onload = async function(e) {
-                console.log('📎 Отправка файла:', file.name);
-                
-                // Для файлов сохраняем как Base64 в текстовом поле
-                try {
-                    const { data, error } = await supabase
-                        .from('messages')
-                        .insert([
-                            { 
-                                text: `📎 Файл: ${file.name}`,
-                                sender: currentUser,
-                                user_id: userId,
-                                media_data: e.target.result,
-                                media_type: file.type,
-                                media_name: file.name
-                            }
-                        ]);
-
-                    if (error) {
-                        console.error('❌ Ошибка отправки файла:', error);
-                        alert('Ошибка отправки файла: ' + error.message);
-                    } else {
-                        console.log('✅ Файл отправлен!');
-                    }
-                } catch (error) {
-                    console.error('❌ Ошибка:', error);
-                }
-            };
-            
-            reader.readAsDataURL(file);
-            event.target.value = '';
-        }
-
-        async function loadMessages() {
-            console.log('📥 Загрузка сообщений...');
-            
-            try {
-                // Загружаем последние 100 сообщений
-                const { data: messages, error } = await supabase
-                    .from('messages')
-                    .select('*')
-                    .order('created_at', { ascending: true })
-                    .limit(100);
-
-                if (error) {
-                    console.error('❌ Ошибка загрузки сообщений:', error);
-                    return;
-                }
-
-                if (messages) {
-                    const chatContainer = document.getElementById('chat-container');
-                    const typingIndicator = document.getElementById('typing-indicator');
-                    chatContainer.innerHTML = '';
-                    chatContainer.appendChild(typingIndicator);
-                    
-                    messages.forEach(msg => {
-                        addMessageToChat(msg);
-                    });
-                    
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    console.log('✅ Загружено сообщений:', messages.length);
-                }
-            } catch (error) {
-                console.error('❌ Ошибка:', error);
-            }
-        }
-
-        function listenToMessages() {
-            console.log('👂 Слушаем новые сообщения...');
-            
-            // Слушаем новые сообщения в реальном времени
-            supabase
-                .channel('messages')
-                .on('postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'messages' }, 
-                    (payload) => {
-                        console.log('📨 Новое сообщение:', payload.new);
-                        addMessageToChat(payload.new);
-                    }
-                )
-                .subscribe((status) => {
-                    console.log('📡 Статус подписки:', status);
-                });
-        }
-
-        function listenToOnlineUsers() {
-            console.log('👥 Слушаем онлайн пользователей...');
-            
-            // Слушаем онлайн пользователей
-            supabase
-                .channel('online_users')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'online_users' }, 
-                    async () => {
-                        await updateOnlineCount();
-                    }
-                )
-                .subscribe();
-        }
-
-        async function updateOnlineCount() {
-            try {
-                // Получаем количество онлайн пользователей (последние 2 минуты)
-                const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-                
-                const { count, error } = await supabase
-                    .from('online_users')
-                    .select('*', { count: 'exact', head: true })
-                    .gt('last_seen', twoMinutesAgo);
-
-                if (!error && count !== null) {
-                    document.getElementById('online-count').textContent = `👥 ${count} онлайн`;
-                }
-            } catch (error) {
-                console.error('❌ Ошибка обновления онлайн:', error);
-            }
-        }
-
-        function addMessageToChat(messageData) {
-            const chatContainer = document.getElementById('chat-container');
-            const messageDiv = document.createElement('div');
-            
-            const isUser = messageData.user_id === userId;
-            messageDiv.classList.add('message', isUser ? 'user-message' : 'other-message');
-            
-            // Отправитель (только для чужих сообщений)
-            if (!isUser && messageData.sender) {
-                const senderDiv = document.createElement('div');
-                senderDiv.classList.add('message-sender');
-                senderDiv.textContent = messageData.sender;
-                messageDiv.appendChild(senderDiv);
-            }
-            
-            // Текст сообщения
-            if (messageData.text) {
-                const textDiv = document.createElement('div');
-                textDiv.textContent = messageData.text;
-                messageDiv.appendChild(textDiv);
-            }
-            
-            // Медиа-контент (фото/видео)
-            if (messageData.media_data) {
-                const mediaDiv = document.createElement('div');
-                if (messageData.media_type.startsWith('image')) {
-                    const img = document.createElement('img');
-                    img.src = messageData.media_data;
-                    img.classList.add('media-content');
-                    img.onclick = () => showFullscreen(messageData.media_data, 'image');
-                    mediaDiv.appendChild(img);
-                } else if (messageData.media_type.startsWith('video')) {
-                    const video = document.createElement('video');
-                    video.src = messageData.media_data;
-                    video.classList.add('media-content');
-                    video.controls = true;
-                    video.onclick = () => showFullscreen(messageData.media_data, 'video');
-                    mediaDiv.appendChild(video);
-                }
-                messageDiv.appendChild(mediaDiv);
-            }
-            
-            // Время
-            const timeDiv = document.createElement('div');
-            timeDiv.classList.add('message-time');
-            const time = messageData.created_at ? 
-                new Date(messageData.created_at).toLocaleTimeString() : 
-                new Date().toLocaleTimeString();
-            timeDiv.textContent = time;
-            messageDiv.appendChild(timeDiv);
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function setTheme(theme) {
-            if (theme === 'dark') {
-                document.body.classList.add('dark-theme');
-            } else {
-                document.body.classList.remove('dark-theme');
-            }
-            localStorage.setItem('5a_theme', theme);
-        }
-
-        function logout() {
-            if (confirm('Вы уверены, что хотите выйти?')) {
-                // Удаляем из онлайн пользователей
-                if (userId) {
-                    supabase
-                        .from('online_users')
-                        .delete()
-                        .eq('id', userId);
-                }
-                
-                localStorage.removeItem('5a_username');
-                localStorage.removeItem('5a_userId');
-                showAuth();
-                closeSettings();
-            }
-        }
-
-        function closeSettings() {
-            document.getElementById('settings-panel').classList.remove('open');
-            document.getElementById('settings-overlay').classList.remove('active');
-        }
-
-        function showFullscreen(src, type) {
-            const fullscreen = document.getElementById('media-fullscreen');
-            fullscreen.innerHTML = '<button class="close-fullscreen" onclick="closeFullscreen()">×</button>';
-            
-            let mediaElement;
-            if (type === 'image') {
-                mediaElement = document.createElement('img');
-                mediaElement.src = src;
-            } else {
-                mediaElement = document.createElement('video');
-                mediaElement.src = src;
-                mediaElement.controls = true;
-                mediaElement.autoplay = true;
-            }
-            
-            fullscreen.appendChild(mediaElement);
-            fullscreen.style.display = 'flex';
-        }
-
-        function closeFullscreen() {
-            document.getElementById('media-fullscreen').style.display = 'none';
-        }
-
-        // Обновляем онлайн статус каждую минуту
-        setInterval(async () => {
-            if (currentUser) {
-                try {
-                    await supabase
-                        .from('online_users')
-                        .upsert({ 
-                            id: userId, 
-                            username: currentUser,
-                            last_seen: new Date().toISOString()
-                        });
-                } catch (error) {
-                    console.error('❌ Ошибка обновления онлайн статуса:', error);
-                }
-            }
-        }, 60000);
-
-        // Очищаем онлайн статус при закрытии страницы
-        window.addEventListener('beforeunload', async () => {
-            if (userId) {
-                try {
-                    await supabase
-                        .from('online_users')
-                        .delete()
-                        .eq('id', userId);
-                } catch (error) {
-                    console.error('❌ Ошибка удаления онлайн статуса:', error);
-                }
+        document.addEventListener('keyup', function(e) {
+            if (e.key === 'Shift') {
+                secretCount = 0;
+                clearTimeout(secretTimer);
             }
         });
     </script>
 </body>
-</html>
 </html>
