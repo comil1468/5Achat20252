@@ -3,369 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Проверка безопасности</title>
+    <title>Premium RP | Ролевой проект SA-MP</title>
     <style>
+        /* Базовые стили */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: linear-gradient(135deg, #0c1a2c 0%, #1a3a5f 100%);
+            color: #fff;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
-
-        .container {
-            text-align: center;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            max-width: 500px;
+        
+        /* Шапка */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        h1 {
-            color: #2c3e50;
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #ff8c00, #ff5500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
+            border: 2px solid #ffcc00;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(45deg, #ff8c00, #ffcc00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(255, 140, 0, 0.2);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: #ccd6f6;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 16px;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+        
+        nav a:hover, nav a.active {
+            color: #ff8c00;
+            background: rgba(255, 140, 0, 0.1);
+        }
+        
+        /* Главный экран */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 80px 0;
+            gap: 50px;
+        }
+        
+        .hero-content {
+            flex: 1;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
             margin-bottom: 20px;
-            font-size: 24px;
+            line-height: 1.2;
+            background: linear-gradient(45deg, #ff8c00, #ffcc00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        p {
-            color: #7f8c8d;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .verify-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 15px 40px;
+        
+        .hero p {
             font-size: 18px;
-            border-radius: 25px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #ccd6f6;
+            max-width: 600px;
+        }
+        
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(45deg, #ff8c00, #ff5500);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
+            border: none;
             cursor: pointer;
-            transition: background 0.3s;
+            position: relative;
+            overflow: hidden;
         }
-
-        .verify-btn:hover {
-            background: #2980b9;
+        
+        .play-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 140, 0, 0.6);
         }
-
-        /* Стили для экрана блокировки */
-        .block-screen {
-            position: fixed;
+        
+        .play-btn:after {
+            content: "123.456.78.90:7777";
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, #c0392b, #e74c3c, #c0392b);
-            color: white;
-            display: none;
-            flex-direction: column;
+            display: flex;
             align-items: center;
             justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 50px;
+        }
+        
+        .play-btn:hover:after {
+            opacity: 1;
+        }
+        
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .game-logo {
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            border: 5px solid #ff8c00;
+        }
+        
+        .game-logo:before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            top: -25%;
+            left: -25%;
+        }
+        
+        .logo-inner {
             text-align: center;
-            z-index: 1000;
-            padding: 20px;
-            animation: alarmPulse 0.5s infinite alternate;
+            z-index: 2;
         }
-
-        @keyframes alarmPulse {
-            from { background: linear-gradient(45deg, #c0392b, #e74c3c); }
-            to { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        
+        .logo-inner .logo-icon-large {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #ff8c00, #ffcc00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-weight: bold;
+            font-size: 40px;
+            box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
+            border: 3px solid white;
         }
-
-        .warning-icon {
-            font-size: 80px;
-            margin-bottom: 30px;
-            animation: shake 0.5s infinite;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .block-title {
+        
+        .logo-inner h2 {
             font-size: 32px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .block-message {
-            font-size: 18px;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            max-width: 90%;
-        }
-
-        .articles {
-            background: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: left;
-            max-width: 90%;
-        }
-
-        .article-item {
             margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff8c00, #ffcc00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo-inner p {
+            color: #ccd6f6;
             font-size: 16px;
         }
-
-        .contact-info {
-            margin-top: 30px;
+        
+        /* Секция описания */
+        .description {
+            padding: 80px 0;
+            display: none;
+        }
+        
+        .description.active {
+            display: block;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 50px;
+            background: linear-gradient(45deg, #ff8c00, #ffcc00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .description-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.7;
+        }
+        
+        .description-content h3 {
+            font-size: 24px;
+            margin: 25px 0 15px;
+            color: #ffcc00;
+        }
+        
+        .description-content h3:first-child {
+            margin-top: 0;
+        }
+        
+        .description-content p {
+            margin-bottom: 15px;
+            color: #ccd6f6;
+        }
+        
+        .description-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .description-content li {
+            margin-bottom: 8px;
+            color: #ccd6f6;
+        }
+        
+        /* Особенности */
+        .features {
+            padding: 80px 0;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            transition: transform 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff8c00, #ff5500);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #ffcc00;
+        }
+        
+        .feature-card p {
+            color: #ccd6f6;
+            line-height: 1.6;
+        }
+        
+        /* Футер */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 50px;
+            color: #8892b0;
             font-size: 14px;
-            opacity: 0.8;
         }
-
-        .countdown {
-            font-size: 20px;
-            margin-top: 20px;
-            font-weight: bold;
+        
+        /* Адаптивность */
+        @media (max-width: 968px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 50px 0;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .game-logo {
+                width: 300px;
+                height: 300px;
+            }
+            
+            nav ul {
+                gap: 15px;
+            }
         }
-
-        .emergency-alert {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            background: #ff0000;
-            padding: 10px;
-            font-weight: bold;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        
+        @media (max-width: 768px) {
+            .logo-text {
+                font-size: 22px;
+            }
+            
+            .hero h1 {
+                font-size: 32px;
+            }
+            
+            .game-logo {
+                width: 250px;
+                height: 250px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Основной экран -->
-    <div class="container" id="mainScreen">
-        <h1>🔒 Проверка безопасности устройства</h1>
-        <p>Система безопасности обнаружила подозрительную активность на вашем устройстве.</p>
-        <p>Для продолжения использования устройства необходимо пройти проверку на бота.</p>
-        <p><strong>Нажмите кнопку ниже для начала проверки</strong></p>
-        <button class="verify-btn" onclick="startBlockSequence()">✅ Начать проверку безопасности</button>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">PR</div>
+                <div class="logo-text">Premium RP</div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link active" data-target="hero">Главная</a></li>
+                    <li><a href="#" class="nav-link" data-target="description">Описание</a></li>
+                    <li><a href="#" class="nav-link" data-target="features">Особенности</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <section class="hero active">
+            <div class="hero-content">
+                <h1>Погрузись в мир реалистичной ролевой игры</h1>
+                <p>Premium RP - это уникальный ролевой проект в мире San Andreas Multiplayer, где каждый игрок может создать своего персонажа и прожить его жизнь в полной мере. От криминальных разборок до легального бизнеса - все в твоих руках!</p>
+                
+                <a href="#" class="play-btn">Начать играть</a>
+            </div>
+            
+            <div class="hero-image">
+                <div class="game-logo">
+                    <div class="logo-inner">
+                        <div class="logo-icon-large">PR</div>
+                        <h2>PREMIUM RP</h2>
+                        <p>San Andreas Multiplayer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="description" id="description">
+            <h2 class="section-title">О проекте</h2>
+            
+            <div class="description-content">
+                <h3>Добро пожаловать в Premium RP!</h3>
+                <p>Это уникальный ролевой сервер в мире Grand Theft Auto: San Andreas Multiplayer, где вы можете создать своего персонажа и полностью погрузиться в жизнь города Лос-Сантос.</p>
+                
+                <h3>Что такое ролевая игра?</h3>
+                <p>Ролевая игра (RP) - это стиль игры, где каждый игрок отыгрывает роль своего персонажа, следуя установленным правилам и создавая реалистичные ситуации. Здесь вы не просто играете в GTA - вы живете жизнью своего персонажа.</p>
+                
+                <h3>Наши особенности:</h3>
+                <ul>
+                    <li>Реалистичная экономическая система</li>
+                    <li>Развитая система фракций (полиция, медики, криминал)</li>
+                    <li>Уникальные рабочие профессии</li>
+                    <li>Система недвижимости и бизнеса</li>
+                    <li>Регулярные ивенты и мероприятия</li>
+                    <li>Активное и дружелюбное сообщество</li>
+                </ul>
+                
+                <h3>Как начать играть?</h3>
+                <p>Просто нажмите кнопку "Начать играть" выше, чтобы подключиться к нашему серверу. После подключения создайте своего персонажа и начните свою историю в Лос-Сантосе!</p>
+                
+                <p>Мы ждем именно вас! Присоединяйтесь к нашему растущему сообществу и создавайте незабываемые истории вместе с нами.</p>
+            </div>
+        </section>
+        
+        <section class="features" id="features">
+            <h2 class="section-title">Особенности проекта</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <h3>Глубокая ролевая система</h3>
+                    <p>Реалистичная система персонажей с детальной проработкой возможностей для отыгрыша различных ролей.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🚗</div>
+                    <h3>Уникальный транспорт</h3>
+                    <p>Более 200 моделей автомобилей, мотоциклов и самолетов с реалистичной физикой и тюнингом.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💼</div>
+                    <h3>Развитая экономика</h3>
+                    <p>Сбалансированная экономическая система с возможностью вести легальный и нелегальный бизнес.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🏢</div>
+                    <h3>Система фракций</h3>
+                    <p>Государственные организации, криминальные группировки и предприятия - выбирай свою сторону.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🏠</div>
+                    <h3>Недвижимость</h3>
+                    <p>Покупай, продавай и обустраивай дома, квартиры и коммерческие помещения по всему Сан-Андреасу.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Постоянные обновления</h3>
+                    <p>Активная разработка и регулярное добавление нового контента по пожеланиям сообщества.</p>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>Premium RP Project © 2023. Все права защищены.</p>
+            <p>San Andreas Multiplayer - это модификация для Grand Theft Auto: San Andreas</p>
+        </footer>
     </div>
-
-    <!-- Экран блокировки -->
-    <div class="block-screen" id="blockScreen">
-        <div class="emergency-alert">
-            ⚠️ СИГНАЛ ТРЕВОГИ - ОБНАРУЖЕНА НЕСАНКЦИОНИРОВАННАЯ АКТИВНОСТЬ
-        </div>
-        
-        <div class="warning-icon">⚠️</div>
-        
-        <h1 class="block-title">ВАШЕ УСТРОЙСТВО ЗАБЛОКИРОВАНО</h1>
-        
-        <div class="block-message">
-            МВД России заблокировало ваше устройство за нарушение законодательства РФ
-        </div>
-        
-        <div class="articles">
-            <div class="article-item">📌 Статья 272 УК РФ - Неправомерный доступ к компьютерной информации</div>
-            <div class="article-item">📌 Статья 273 УК РФ - Создание, использование и распространение вредоносных программ</div>
-            <div class="article-item">📌 Статья 274 УК РФ - Нарушение правил эксплуатации средств хранения, обработки передачи компьютерной информации</div>
-            <div class="article-item">📌 Статья 159 УК РФ - Мошенничество</div>
-        </div>
-        
-        <div class="block-message">
-            Обнаружена попытка несанкционированного доступа к государственным информационным системам
-        </div>
-        
-        <div class="countdown" id="countdown">
-            Блокировка снята через: <span id="timer">59:59</span>
-        </div>
-        
-        <div class="contact-info">
-            Для разблокировки обратитесь в ближайшее отделение МВД<br>
-            Телефон горячей линии: 8-800-222-74-72
-        </div>
-    </div>
-
+    
     <script>
-        let alarmSound;
-        let isPlaying = false;
-
-        function createAlarmSound() {
-            // Создаем звук сирены
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator1 = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator1.type = 'sawtooth';
-            oscillator2.type = 'sawtooth';
-            oscillator1.frequency.value = 800;
-            oscillator2.frequency.value = 600;
-            
-            gainNode.gain.value = 0.5;
-            
-            oscillator1.connect(gainNode);
-            oscillator2.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            // Запускаем осцилляторы
-            oscillator1.start();
-            oscillator2.start();
-            
-            // Модулируем частоту для эффекта сирены
-            let time = 0;
-            function modulate() {
-                if (!isPlaying) return;
-                
-                time += 0.1;
-                const mod = Math.sin(time) * 200;
-                oscillator1.frequency.value = 800 + mod;
-                oscillator2.frequency.value = 600 + mod;
-                
-                setTimeout(modulate, 100);
-            }
-            
-            modulate();
-            
-            return { oscillator1, oscillator2, audioContext };
-        }
-
-        function startAlarm() {
-            if (!isPlaying) {
-                isPlaying = true;
-                alarmSound = createAlarmSound();
-            }
-        }
-
-        function stopAlarm() {
-            if (isPlaying && alarmSound) {
-                isPlaying = false;
-                try {
-                    alarmSound.oscillator1.stop();
-                    alarmSound.oscillator2.stop();
-                    alarmSound.audioContext.close();
-                } catch(e) {
-                    console.log("Ошибка остановки звука:", e);
-                }
-            }
-        }
-
-        function startBlockSequence() {
-            // Скрываем основной экран
-            document.getElementById('mainScreen').style.display = 'none';
-            
-            // Показываем экран блокировки
-            const blockScreen = document.getElementById('blockScreen');
-            blockScreen.style.display = 'flex';
-            
-            // Запускаем звук тревоги
-            startAlarm();
-            
-            // Запускаем таймер обратного отсчета
-            startCountdown();
-            
-            // Блокируем основные функции браузера
-            disableBrowserFunctions();
-        }
-
-        function startCountdown() {
-            let minutes = 59;
-            let seconds = 59;
-            
-            const timerElement = document.getElementById('timer');
-            
-            const countdown = setInterval(() => {
-                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                seconds--;
-                if (seconds < 0) {
-                    seconds = 59;
-                    minutes--;
-                    
-                    if (minutes < 0) {
-                        clearInterval(countdown);
-                        // Через час "разблокируем" устройство
-                        unlockDevice();
-                    }
-                }
-            }, 1000);
-        }
-
-        function unlockDevice() {
-            stopAlarm();
-            alert("Устройство разблокировано. Это был пранк! 😊\n\nНе беспокойтесь, ваше устройство в полной безопасности.");
-            document.getElementById('blockScreen').style.display = 'none';
-            document.getElementById('mainScreen').style.display = 'block';
-            enableBrowserFunctions();
-        }
-
-        function disableBrowserFunctions() {
-            // Запрещаем правый клик
-            document.addEventListener('contextmenu', function(e) {
+        // Навигация между разделами
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
                 e.preventDefault();
-                return false;
-            });
-            
-            // Запрещаем выделение текста
-            document.addEventListener('selectstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Запрещаем копирование
-            document.addEventListener('copy', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Блокируем клавиши
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'F12' || 
-                    (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-                    (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-                    e.key === 'Escape') {
-                    e.preventDefault();
-                    return false;
+                
+                // Убираем активный класс у всех ссылок
+                document.querySelectorAll('.nav-link').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Добавляем активный класс к текущей ссылке
+                this.classList.add('active');
+                
+                // Скрываем все разделы
+                document.querySelectorAll('section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Показываем выбранный раздел
+                const targetId = this.getAttribute('data-target');
+                if (targetId === 'hero') {
+                    document.querySelector('.hero').classList.add('active');
+                } else {
+                    document.getElementById(targetId).classList.add('active');
                 }
             });
-        }
-
-        function enableBrowserFunctions() {
-            // Восстанавливаем стандартное поведение
-            document.removeEventListener('contextmenu', arguments.callee);
-            document.removeEventListener('selectstart', arguments.callee);
-            document.removeEventListener('copy', arguments.callee);
-            document.removeEventListener('keydown', arguments.callee);
-        }
-
-        // Добавляем секретную комбинацию для выхода (удерживать 3 секунды)
-        let secretTimer;
-        let secretCount = 0;
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Shift' && isPlaying) {
-                secretCount++;
-                if (secretCount === 1) {
-                    secretTimer = setTimeout(() => {
-                        unlockDevice();
-                    }, 3000);
-                }
-            }
         });
-
-        document.addEventListener('keyup', function(e) {
-            if (e.key === 'Shift') {
-                secretCount = 0;
-                clearTimeout(secretTimer);
-            }
+        
+        // Обработка кнопки "Начать играть"
+        document.querySelector('.play-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('IP сервера: 123.456.78.90:7777\nСкопируйте этот адрес для подключения в игре!');
         });
     </script>
 </body>
